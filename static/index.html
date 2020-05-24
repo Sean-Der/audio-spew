@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <title> audio-spew </title>
+    <script>
+      let pc = new RTCPeerConnection()
+      pc.addTransceiver('audio', {'direction': 'sendrecv'})
+      pc.createOffer().then(d => pc.setLocalDescription(d)).catch(console.log)
+
+      pc.ontrack = function (event) {
+        var el = document.createElement(event.track.kind)
+        el.srcObject = event.streams[0]
+        el.autoplay = true
+        el.controls = true
+
+        document.getElementsByTagName('body')[0].appendChild(el)
+      }
+
+      pc.onicecandidate = event => {
+        if (event.candidate === null) {
+          fetch('/connect', {
+            method: 'post',
+            body: JSON.stringify(pc.localDescription),
+          }).then(response => response.json())
+            .then(data     => pc.setRemoteDescription(new RTCSessionDescription(data)))
+        }
+      }
+
+    </script>
+  </head>
+
+  <body>
+  </body>
+</html>
